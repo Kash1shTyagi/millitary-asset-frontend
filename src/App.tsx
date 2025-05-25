@@ -33,6 +33,10 @@ const App: React.FC = () => {
           path="/dashboard"
           element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
         />
+        <Route
+          path="/dashboard/*"
+          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+        />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

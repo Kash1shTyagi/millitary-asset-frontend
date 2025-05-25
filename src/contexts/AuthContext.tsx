@@ -1,42 +1,68 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+interface User {
+    role: string;
+    baseId?: number;
+}
+
 interface AuthContextType {
-  isAuthenticated: boolean;
-  login: (token: string) => void;
-  logout: () => void;
+    isAuthenticated: boolean;
+    login: (token: string, user: User) => void;
+    logout: () => void;
+    user: User | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  login: () => {},
-  logout: () => {}
+    isAuthenticated: false,
+    login: () => { },
+    logout: () => { },
+    user: null
 });
 
+
+
 export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [user, setUser] = useState<User | null>(null);
 
-  // On mount, check localStorage
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    setIsAuthenticated(!!token);
-  }, []);
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        const userData = localStorage.getItem('user');
+        
+        if (token && userData) {
+            try {
+                const parsedUser = JSON.parse(userData);
+                setIsAuthenticated(true);
+                setUser(parsedUser);
+            } catch (e) {
+                console.error('Failed to parse user data:', e);
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+            }
+        }
+    }, []);
 
-  const login = (token: string) => {
-    localStorage.setItem('accessToken', token);
-    setIsAuthenticated(true);
-  };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    setIsAuthenticated(false);
-  };
+    const login = (token: string, user: User) => {
+        localStorage.setItem('accessToken', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        setIsAuthenticated(true);
+        setUser(user);
+        
+    };
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    const logout = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        setIsAuthenticated(false);
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
-// Custom hook for easy usage
 export const useAuth = () => useContext(AuthContext);

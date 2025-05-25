@@ -24,9 +24,12 @@ const Login: React.FC = () => {
       );
 
       const token = response.data.data.token;
+      const role = response.data.data.role;
+      const baseId = response.data.data.baseId;
+    //   console.log('BaseId:', baseId);
       // Tell context we’re logged in:
-      login(token);
-
+      login(token, { role, baseId });
+      
       // Then navigate to dashboard
       navigate('/dashboard');
     } catch (err: any) {
